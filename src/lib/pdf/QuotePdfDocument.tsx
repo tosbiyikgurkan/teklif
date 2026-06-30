@@ -322,7 +322,7 @@ function DetailLines({
   return (
     <View>
       {filtered.map((line, i) => (
-        <Text key={i} style={style}>
+        <Text key={i} style={style as any}>
           {line}
         </Text>
       ))}
