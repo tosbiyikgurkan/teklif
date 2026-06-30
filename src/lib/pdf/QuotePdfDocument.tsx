@@ -315,14 +315,14 @@ function DetailLines({
   style,
 }: {
   lines: (string | null | undefined)[];
-  style: object;
+  style: any;
 }) {
   const filtered = lines.filter(Boolean) as string[];
   if (filtered.length === 0) return <View />;
   return (
     <View>
       {filtered.map((line, i) => (
-        <Text key={i}>
+        <Text key={i} style={style}>
           {line}
         </Text>
       ))}
