@@ -1,0 +1,152 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/tenant"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Customer {
+  id           String        @id @default(cuid())
+  name         String
+  taxNumber    String?
+  taxOffice    String?
+  email        String?
+  phone        String?
+  address      String?
+  city         String?
+  notes        String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  transactions Transaction[]
+  quotes       Quote[]
+  invoices     Invoice[]
+}
+
+model Transaction {
+  id            String          @id @default(cuid())
+  customerId    String
+  customer      Customer        @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  type          TransactionType
+  amount        Float
+  description   String
+  date          DateTime        @default(now())
+  referenceType String?
+  referenceId   String?
+  createdAt     DateTime        @default(now())
+}
+
+model Quote {
+  id          String      @id @default(cuid())
+  quoteNumber String      @unique
+  customerId  String
+  customer    Customer    @relation(fields: [customerId], references: [id])
+  status      QuoteStatus @default(DRAFT)
+  validUntil   DateTime?
+  notes        String?
+  currency     String      @default("TRY")
+  exchangeRate Float       @default(1)
+  subtotal     Float       @default(0)
+  taxRate     Float       @default(20)
+  taxAmount   Float       @default(0)
+  total       Float       @default(0)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  items       QuoteItem[]
+  invoices    Invoice[]
+}
+
+model QuoteItem {
+  id                String  @id @default(cuid())
+  quoteId           String
+  quote             Quote   @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  serviceId         String?
+  description       String
+  detailDescription String?
+  unit              String  @default("adet")
+  quantity          Float   @default(1)
+  unitPrice         Float
+  total             Float
+}
+
+model Invoice {
+  id            String        @id @default(cuid())
+  invoiceNumber String        @unique
+  customerId    String
+  customer      Customer      @relation(fields: [customerId], references: [id])
+  quoteId       String?
+  quote         Quote?        @relation(fields: [quoteId], references: [id])
+  status        InvoiceStatus @default(DRAFT)
+  issueDate     DateTime      @default(now())
+  dueDate       DateTime?
+  notes         String?
+  currency      String        @default("TRY")
+  exchangeRate  Float         @default(1)
+  subtotal      Float         @default(0)
+  taxRate       Float         @default(20)
+  taxAmount     Float         @default(0)
+  total         Float         @default(0)
+  paidAmount    Float         @default(0)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  items         InvoiceItem[]
+  payments      Payment[]
+}
+
+model InvoiceItem {
+  id                String  @id @default(cuid())
+  invoiceId         String
+  invoice           Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  description       String
+  detailDescription String?
+  unit              String  @default("adet")
+  quantity          Float   @default(1)
+  unitPrice         Float
+  total             Float
+}
+
+model Payment {
+  id          String   @id @default(cuid())
+  invoiceId   String
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  amount      Float
+  paymentDate DateTime @default(now())
+  method      String?
+  notes       String?
+  createdAt   DateTime @default(now())
+}
+
+model Service {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  pageContent String?
+  unit        String   @default("adet")
+  currency    String   @default("TRY")
+  unitPrice   Float    @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum TransactionType {
+  DEBIT
+  CREDIT
+}
+
+enum QuoteStatus {
+  DRAFT
+  SENT
+  APPROVED
+  REJECTED
+  EXPIRED
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  PARTIAL
+  OVERDUE
+  CANCELLED
+}
